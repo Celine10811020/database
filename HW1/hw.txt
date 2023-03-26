@@ -1,0 +1,311 @@
+//creat tables
+CREATE TABLE games(
+Game INT NOT NULL,
+away CHAR(3) NOT NULL,
+home CHAR(3) NOT NULL,
+away_score TINYINT,
+home_score TINYINT,
+Date datetime NOT NULL,
+PRIMARY KEY(Game));
+
+CREATE TABLE inning(
+Game INT NOT NULL,
+Inning CHAR(3) NOT NULL,
+Runs TINYINT,
+Hits TINYINT,
+Errors TINYINT,
+PRIMARY KEY (Game, Inning),
+FOREIGN KEY (Game)
+  REFERENCES games(Game));
+  
+CREATE TABLE hitters(
+Game INT NOT NULL,
+Team CHAR(3) NOT NULL,
+AB TINYINT,
+R TINYINT,
+H TINYINT,
+RBI TINYINT,
+BB TINYINT,
+K TINYINT,
+num_P TINYINT,
+Position VARCHAR(20),
+Hitter_Id MEDIUMINT NOT NULL,
+PRIMARY KEY (Game, Hitter_Id),
+FOREIGN KEY (Game)
+  REFERENCES games(Game));
+  
+CREATE TABLE pitchers(
+Game INT NOT NULL,
+Team CHAR(3) NOT NULL,
+IP FLOAT,
+H TINYINT,
+R TINYINT,
+ER TINYINT,
+BB TINYINT,
+K TINYINT,
+HR TINYINT,
+PC_ST VARCHAR(10),
+Pitcher_Id MEDIUMINT NOT NULL,
+PRIMARY KEY (Game, Pitcher_Id),
+FOREIGN KEY (Game)
+  REFERENCES games(Game));
+
+CREATE TABLE pitches(
+Pitch_Id MEDIUMINT NOT NULL,
+Game INT NOT NULL,
+EventId SMALLINT NOT NULL,
+Num TINYINT NOT NULL,
+Inning CHAR(3),
+Pitcher VARCHAR(35),
+Pitch VARCHAR(50),
+_Type VARCHAR(20),
+MPH SMALLINT,
+PRIMARY KEY (Pitch_Id),
+FOREIGN KEY (Game)
+  REFERENCES games(Game));
+  
+CREATE TABLE players(
+Id MEDIUMINT NOT NULL,
+Name VARCHAR(20),
+PRIMARY KEY(Id));
+
+
+//import csv files
+LOAD DATA LOCAL INFILE '/home/sushi/Desktop/games.csv'
+INTO TABLE games
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA LOCAL INFILE '/home/sushi/Desktop/inning.csv'
+INTO TABLE inning
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA LOCAL INFILE '/home/sushi/Desktop/hitters.csv'
+INTO TABLE hitters
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA LOCAL INFILE '/home/sushi/Desktop/pitchers.csv'
+INTO TABLE pitchers
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA LOCAL INFILE '/home/sushi/Desktop/pitches.csv'
+INTO TABLE pitches
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA LOCAL INFILE '/home/sushi/Desktop/players.csv'
+INTO TABLE players
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+
+//query tasks
+//1.
+SELECT COUNT(*) AS cnt
+FROM games
+WHERE ABS(away_score - home_score) >= 10;
+
+//2.
+SELECT
+  Game AS Game,
+  CEIL(COUNT(Inning) / 2) AS num_innings
+FROM inning
+GROUP BY Game
+HAVING num_innings = (
+  SELECT * FROM (
+    SELECT CEIL(COUNT(Inning) / 2) AS temp
+    FROM inning
+    GROUP BY Game
+    ORDER BY temp DESC
+    LIMIT 1
+  ) AS tmp
+)
+ORDER BY Game ASC;
+
+//3.
+SELECT 
+  pitchers.Pitcher_Id AS Pitcher_Id, 
+  players.Name AS Pitcher, 
+  ROUND(SUM(pitchers.IP), 1) AS tol_innings
+FROM pitchers
+JOIN players ON pitchers.Pitcher_Id = players.Id
+JOIN games ON pitchers.Game = games.Game
+WHERE games.Date BETWEEN '2021-04-01' AND '2021-11-30'
+GROUP BY pitchers.Pitcher_Id, players.Name
+ORDER BY tol_innings DESC
+LIMIT 3;
+
+//4.
+SELECT
+  players.Name AS Hitter,
+  ROUND(AVG(hitters.num_P / (hitters.AB + hitters.K + hitters.BB)), 4) AS `avg_P/PA`,
+  ROUND(AVG(hitters.AB), 4) AS avg_AB,
+  ROUND(AVG(hitters.BB), 4) AS avg_BB,
+  ROUND(AVG(hitters.K), 4) AS avg_K,
+  SUM(hitters.AB + hitters.K + hitters.BB) AS tol_PA
+FROM hitters
+JOIN players ON hitters.Hitter_Id = players.Id
+WHERE hitters.AB + hitters.K + hitters.BB > 0
+GROUP BY hitters.Hitter_Id
+HAVING tol_PA >= 20
+ORDER BY `avg_P/PA` DESC
+LIMIT 3;
+
+//5.
+SELECT
+  Team,
+  The_month,
+  MIN(interval_time) AS time_interval
+FROM (
+  SELECT
+    team AS Team,
+    DATE_FORMAT(Date, '%Y-%m') AS The_month,
+    TIME_FORMAT(TIMEDIFF(date, LAG(date) OVER (PARTITION BY team ORDER BY date)), '%H:%i') AS interval_time
+  FROM (
+    SELECT 
+      home AS team,
+      Date AS date
+    FROM games
+    UNION ALL
+    SELECT 
+      away AS team,
+      Date AS date
+    FROM games
+  ) AS new_table
+) AS newTable
+WHERE The_month = (
+  SELECT
+    DATE_FORMAT(games.Date, '%Y-%m') AS date
+  FROM
+    games
+  GROUP BY
+    DATE_FORMAT(games.Date, '%Y-%m')
+  ORDER BY
+    COUNT(DATE_FORMAT(games.Date, '%Y-%m')) DESC
+  LIMIT 1
+)
+GROUP BY Team, The_month;
+
+//6.
+SELECT 
+  DISTINCT _Type AS Type
+FROM pitches
+WHERE _Type NOT IN (
+  SELECT _Type
+  FROM pitches
+  WHERE MPH > 95
+)
+ORDER BY _Type ASC;
+
+//7.
+SELECT
+  Team,
+  players.Name AS Hitter,
+  avg_hit_rate,
+  tol_hit,
+  win_rate
+FROM (
+    SELECT
+    Team,
+    player_id,
+    avg_hit_rate,
+    tol_hit,
+    win_rate
+  FROM (
+    SELECT 
+      team AS Team,
+      player_id,
+      hitting_rate AS avg_hit_rate,
+      total_hit AS tol_hit,
+      win_rate,
+      ROW_NUMBER() OVER (PARTITION BY team ORDER BY hitting_rate DESC) AS rate_place
+    FROM (
+      SELECT
+        player_id,
+        team,
+        SUM(AB) AS total_hit,
+        ROUND(AVG(hit_rate), 4) AS hitting_rate,
+        win_rate
+      FROM (
+        SELECT 
+          H, 
+          AB, 
+          H / AB AS hit_rate,
+          Game,
+          Hitter_Id AS player_id,
+          new_hitters.Team AS team,
+          top_winning_rate_team.winning_rate AS win_rate
+        FROM (
+          SELECT * 
+          FROM hitters
+          WHERE 
+            AB > 0 AND
+            Game IN (
+              SELECT Game
+              FROM games
+              WHERE DATE_FORMAT(games.Date, '%Y') = "2021"
+            )
+        ) AS new_hitters 
+        JOIN (
+          SELECT
+            team,
+            winning_rate
+          FROM (
+            SELECT 
+              team, 
+              SUM(CASE WHEN team_score > enemy_score THEN 1 ELSE 0 END) AS total_wins,
+              COUNT(*) AS total_games,
+              ROUND(SUM(CASE WHEN team_score > enemy_score THEN 1 ELSE 0 END) / COUNT(*), 4) AS winning_rate
+            FROM (
+              SELECT
+                Game AS game_id,
+                home AS team,
+                home_score AS team_score,
+                away_score AS enemy_score
+              FROM games
+              WHERE DATE_FORMAT(games.Date, '%Y') = "2021"
+              UNION ALL
+              SELECT 
+                Game AS game_id,
+                away AS team,
+                away_score AS team_score,
+                home_score AS enemy_score
+              FROM games
+              WHERE DATE_FORMAT(games.Date, '%Y') = "2021"
+            ) AS new_games_table
+            GROUP BY 
+              team
+            ORDER BY winning_rate DESC
+            LIMIT 5
+          ) AS top_winning_rate
+        ) AS top_winning_rate_team
+        ON top_winning_rate_team.team = new_hitters.Team
+      ) AS hitters_hitting_rate
+      GROUP BY
+        player_id, team
+      ORDER BY hitting_rate ASC
+    ) AS new_table_2
+  WHERE 
+    hitting_rate IS NOT NULL AND
+    total_hit >= 100
+  ORDER BY win_rate DESC
+  ) AS final_table
+WHERE rate_place = 1
+) AS really_final_one
+JOIN players
+ON really_final_one.player_id = players.Id;
