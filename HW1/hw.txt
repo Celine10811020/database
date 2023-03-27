@@ -113,6 +113,25 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS;
 
+//questions
+//1.
+CHAR是用來儲存固定長度的字串；VARCHAR則可以儲存長度不固定的字串。
+例如：Team的名字都固定是三個字元，其資料形態就可以是CHAR(3)；而因爲選手的名字長度都不一致，因此其資料形態則需宣告VARCHAR(20)。
+
+//2.
+Foreign key是指向其他table的primary key的column，用於確定兩個table的關聯性及資料完整性。
+Foreign key中的資料，必須要出現在他指向的primary key中。
+例如：inning中的Game，一定會出現在games中的Game。這個限制可以避免inning中出現一場不存在的比賽（無法在games中找到該場比賽）。
+
+//3.
+TINYINT: 1 byte, from -128 to 127
+SMALLINT: 2 bytes, from -32768 to 32767
+MEDIUMINT: 3 bytes, from -8388608 to  8388607
+INT: 4 bytes, from -2147483648 to 2147483647
+
+//4.
+我覺得這個schema挺完整的，尤其是寫完後面的query tasks後，發現這麼設計真的很方便，想不到還有什麼可以改進的地方。
+原本有在想爲什麼players的那個table沒有Team的column，寫到後面的第8題才知道竟然還有交易選手這種東西的存在......。
 
 //query tasks
 //1.
@@ -955,3 +974,8 @@ ORDER BY
   winning_rate ASC, 
   diff_hitting_rate ASC
 LIMIT 1;
+
+//10.
+送分
+
+//11.
