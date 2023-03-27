@@ -205,7 +205,7 @@ UNION
 SELECT *
 FROM (
   SELECT
-    'Changed' AS Pitcher,
+    'Unchanged' AS Pitcher,
     COUNT(*) AS cnt,
     ROUND(AVG(2020_avg_K_IP), 4) AS `2020_avg_K/9`
   FROM (
@@ -226,6 +226,52 @@ FROM (
       WHERE 
         DATE_FORMAT(games.Date, '%Y') = "2020" AND
         Pitcher_id IN (
+          SELECT * 
+          FROM (
+          SELECT DISTINCT
+            Pitcher_id
+          FROM (
+            SELECT
+              player_year.Pitcher_id,
+              date,
+              ROW_NUMBER() OVER (PARTITION BY Pitcher_id ORDER BY date ASC) AS year_num
+            FROM (
+              SELECT DISTINCT
+                Pitcher_id,
+                DATE_FORMAT(games.Date, '%Y') AS date
+              FROM
+                games
+              JOIN
+                pitchers
+              ON pitchers.Game = games.Game
+              WHERE 
+                (DATE_FORMAT(games.Date, '%Y') = "2020" OR
+                DATE_FORMAT(games.Date, '%Y') = "2021") AND
+                IP > 0
+              ORDER BY Pitcher_Id ASC
+            ) AS player_year
+            JOIN (
+              SELECT
+                Pitcher_Id,
+                SUM(IP) AS total_inning
+              FROM
+                pitchers
+              JOIN
+                games
+              ON pitchers.Game = games.Game
+              WHERE 
+                (DATE_FORMAT(games.Date, '%Y') = "2020" OR
+                DATE_FORMAT(games.Date, '%Y') = "2021") AND
+                IP > 0
+              GROUP BY Pitcher_Id
+              HAVING total_inning > 50
+              ORDER BY Pitcher_Id ASC
+            ) AS fifty_inning_player
+            ON player_year.Pitcher_Id = fifty_inning_player.Pitcher_Id
+          ) AS two_year_player
+          WHERE year_num = 2
+        ) AS new_player_list
+        WHERE Pitcher_id NOT IN (
           SELECT 
             new_two_team_player.Pitcher_Id AS Pitcher_Id
           FROM (
@@ -300,6 +346,7 @@ FROM (
           ) AS new_two_year_player
           ON new_two_team_player.Pitcher_Id = new_two_year_player.Pitcher_Id
         )
+      )
       ORDER BY Pitcher_Id ASC
     ) AS 2020_player
     GROUP BY Pitcher_Id
@@ -326,6 +373,52 @@ JOIN (
       WHERE 
         DATE_FORMAT(games.Date, '%Y') = "2021" AND
         Pitcher_id IN (
+          SELECT * 
+          FROM (
+          SELECT DISTINCT
+            Pitcher_id
+          FROM (
+            SELECT
+              player_year.Pitcher_id,
+              date,
+              ROW_NUMBER() OVER (PARTITION BY Pitcher_id ORDER BY date ASC) AS year_num
+            FROM (
+              SELECT DISTINCT
+                Pitcher_id,
+                DATE_FORMAT(games.Date, '%Y') AS date
+              FROM
+                games
+              JOIN
+                pitchers
+              ON pitchers.Game = games.Game
+              WHERE 
+                (DATE_FORMAT(games.Date, '%Y') = "2020" OR
+                DATE_FORMAT(games.Date, '%Y') = "2021") AND
+                IP > 0
+              ORDER BY Pitcher_Id ASC
+            ) AS player_year
+            JOIN (
+              SELECT
+                Pitcher_Id,
+                SUM(IP) AS total_inning
+              FROM
+                pitchers
+              JOIN
+                games
+              ON pitchers.Game = games.Game
+              WHERE 
+                (DATE_FORMAT(games.Date, '%Y') = "2020" OR
+                DATE_FORMAT(games.Date, '%Y') = "2021") AND
+                IP > 0
+              GROUP BY Pitcher_Id
+              HAVING total_inning > 50
+              ORDER BY Pitcher_Id ASC
+            ) AS fifty_inning_player
+            ON player_year.Pitcher_Id = fifty_inning_player.Pitcher_Id
+          ) AS two_year_player
+          WHERE year_num = 2
+        ) AS new_player_list
+        WHERE Pitcher_id NOT IN (
           SELECT 
             new_two_team_player.Pitcher_Id AS Pitcher_Id
           FROM (
@@ -400,6 +493,7 @@ JOIN (
           ) AS new_two_year_player
           ON new_two_team_player.Pitcher_Id = new_two_year_player.Pitcher_Id
         )
+      )
       ORDER BY Pitcher_Id ASC
     ) AS 2021_player
     GROUP BY Pitcher_Id
