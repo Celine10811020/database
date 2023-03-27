@@ -4,13 +4,13 @@ SELECT
 FROM (
   SELECT
     game_id,
-    diff_hitting_rate,
+    ROUND(diff_hitting_rate, 2) AS diff_hitting_rate,
     win_or_lose,
     AVG(win_or_lose) OVER (ORDER BY diff_hitting_rate DESC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS winning_rate
   FROM (
     SELECT
       game_id,
-      ROUND(diff_hitting_rate, 2) AS diff_hitting_rate,
+      FLOOR(diff_hitting_rate * 100) / 100 AS diff_hitting_rate,
       win_or_lose
     FROM (
       SELECT
