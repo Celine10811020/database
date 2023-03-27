@@ -3,14 +3,23 @@ FROM (
   SELECT
     'Changed' AS Pitcher,
     COUNT(*) AS cnt,
-    ROUND(AVG(2020_avg_K_IP), 4) AS `2020_avg_K/9`
+    ROUND(AVG(2020_avg_K_IP), 4) AS `2020_avg_K/9`,
+    ROUND(AVG(2020_PC_ST), 4) AS `2020_PC-ST`,
+    ROUND(AVG(2020_PC), 4) AS `2020_PC`,
+    ROUND(AVG(2020_ST), 4) AS `2020_ST`
   FROM (
     SELECT
       2020_player.Pitcher_id AS Pitcher_id,
-      AVG(avg_K_IP) AS 2020_avg_K_IP
+      AVG(avg_K_IP) AS 2020_avg_K_IP,
+      AVG(PC_ST) AS 2020_PC_ST,
+      AVG(PC) AS 2020_PC,
+      AVG(ST) AS 2020_ST
     FROM (
       SELECT
         Pitcher_id,
+        CAST(SUBSTRING_INDEX(PC_ST, '-', 1) AS UNSIGNED) AS PC,
+        CAST(SUBSTRING_INDEX(PC_ST, '-', -1) AS UNSIGNED) AS ST,
+        PC_ST,
         K,
         IP,
         9 * K / IP AS avg_K_IP
@@ -103,14 +112,23 @@ FROM (
 ) AS 2020_changed_K
 JOIN (
   SELECT
-    ROUND(AVG(2021_avg_K_IP), 4) AS `2021_avg_K/9`
+    ROUND(AVG(2021_avg_K_IP), 4) AS `2021_avg_K/9`,
+    ROUND(AVG(2021_PC_ST), 4) AS `2021_PC-ST`,
+    ROUND(AVG(2021_PC), 4) AS `2020_PC`,
+    ROUND(AVG(2021_ST), 4) AS `2020_ST`
   FROM (
     SELECT
       2021_player.Pitcher_id AS Pitcher_id,
-      AVG(avg_K_IP) AS 2021_avg_K_IP
+      AVG(avg_K_IP) AS 2021_avg_K_IP,
+      AVG(PC_ST) AS 2021_PC_ST,
+      AVG(PC) AS 2021_PC,
+      AVG(ST) AS 2021_ST
     FROM (
       SELECT
         Pitcher_id,
+        PC_ST,
+        CAST(SUBSTRING_INDEX(PC_ST, '-', 1) AS UNSIGNED) AS PC,
+        CAST(SUBSTRING_INDEX(PC_ST, '-', -1) AS UNSIGNED) AS ST,
         K,
         IP,
         9 * K / IP AS avg_K_IP
@@ -207,14 +225,23 @@ FROM (
   SELECT
     'Unchanged' AS Pitcher,
     COUNT(*) AS cnt,
-    ROUND(AVG(2020_avg_K_IP), 4) AS `2020_avg_K/9`
+    ROUND(AVG(2020_avg_K_IP), 4) AS `2020_avg_K/9`,
+    ROUND(AVG(2020_PC_ST), 4) AS `2020_PC-ST`,
+    ROUND(AVG(2020_PC), 4) AS `2020_PC`,
+    ROUND(AVG(2020_ST), 4) AS `2020_ST`
   FROM (
     SELECT
       2020_player.Pitcher_id AS Pitcher_id,
-      AVG(avg_K_IP) AS 2020_avg_K_IP
+      AVG(avg_K_IP) AS 2020_avg_K_IP,
+      AVG(PC_ST) AS 2020_PC_ST,
+      AVG(PC) AS 2020_PC,
+      AVG(ST) AS 2020_ST
     FROM (
       SELECT
         Pitcher_id,
+        PC_ST,
+        CAST(SUBSTRING_INDEX(PC_ST, '-', 1) AS UNSIGNED) AS PC,
+        CAST(SUBSTRING_INDEX(PC_ST, '-', -1) AS UNSIGNED) AS ST,
         K,
         IP,
         9 * K / IP AS avg_K_IP
@@ -354,14 +381,23 @@ FROM (
 ) AS 2020_changed_K
 JOIN (
   SELECT
-    ROUND(AVG(2021_avg_K_IP), 4) AS `2021_avg_K/9`
+    ROUND(AVG(2021_avg_K_IP), 4) AS `2021_avg_K/9`,
+    ROUND(AVG(2021_PC_ST), 4) AS `2021_PC-ST`,
+    ROUND(AVG(2021_PC), 4) AS `2020_PC`,
+    ROUND(AVG(2021_ST), 4) AS `2020_ST`
   FROM (
     SELECT
       2021_player.Pitcher_id AS Pitcher_id,
-      AVG(avg_K_IP) AS 2021_avg_K_IP
+      AVG(avg_K_IP) AS 2021_avg_K_IP,
+      AVG(PC_ST) AS 2021_PC_ST,
+      AVG(PC) AS 2021_PC,
+      AVG(ST) AS 2021_ST
     FROM (
       SELECT
         Pitcher_id,
+        PC_ST,
+        CAST(SUBSTRING_INDEX(PC_ST, '-', 1) AS UNSIGNED) AS PC,
+        CAST(SUBSTRING_INDEX(PC_ST, '-', -1) AS UNSIGNED) AS ST,
         K,
         IP,
         9 * K / IP AS avg_K_IP
