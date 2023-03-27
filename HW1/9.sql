@@ -92,7 +92,7 @@ FROM (
     ORDER BY diff_hitting_rate DESC
   ) AS order_by_diff_hitting_rate
 ) AS final_one
-WHERE winning_rate >= 0.95
+WHERE winning_rate > 0.95
 ORDER BY 
   winning_rate ASC, 
   diff_hitting_rate ASC
