@@ -1,0 +1,56 @@
+table games with 6 columns.
+they are Game stand for The game id, 
+away stand for The name of away team,
+home stand for The name of home team,
+away_score stand for The final score of away team,
+home_score stand for The final score of home team, and
+Date stand for The date of the game hold.
+
+table inning with 5 columns.
+they are Game stand for The game id,
+Inning tand for The Inning of the game (局數) e.g. T1, B1,
+Runs tand for The points the attacker gets in the inning,
+Hits tand for The errors(安打) in the Inning,
+Errors tand for The errors(失誤數) in the Inning.
+
+table hitters 11 columns
+they are Game The game id
+Team The name of hitter’s team
+AB At Bats (打數)
+H Hits (安打)
+R Runs (得分), meaning you run back to the home base and get a point
+RBI Run Batted In (打點), meaning your hit lead to points
+BB Base on Balls (四壞保送)
+K Strike Out (三振)
+num_P The balls the hitter consumes in the game (投手對打者投了幾顆球，也可以算做打者當局比賽消耗了幾顆球)
+Position The hitter position when defending
+Hitter_Id The ID of the player
+
+table pitchers
+they are Game stand for The game id,
+Team stand for The name of the pitcher’s team,
+IP stand for The number of inning the pitcher pitched,
+H stand for The number of hits(安打) on the pitch,
+R stand for The runs(得分) on the pitch,
+ER stand for The number of errors(失誤) of the pitch,
+BB stand for The number of base on balls(四壞保送) of the pitch,
+K stand for The number of strike out (三振) of the pitch,
+HR stand for The number of home runs(全壘打) on the pitch,
+PC-ST stand for Pitch Count - Strikes(投球數-好球數),
+Pitcher_Id stand for The ID of the player.
+
+table pitches with 9 columns.
+they are Pitch_Id The index of the pitches
+Game The game id
+Event Id The current number of hitter in the game
+Num The current number of the pitch on the hitter
+Inning The Inning of the game (局數) e.g. Top 1st, Bottom 9th
+Pitcher	The name of the pitcher
+Pitch The result after the hit. e.g.“Strike Looking”、“Ground Out”
+Type The type of the pitches (球種)
+MPH The speed of the ball (球速)
+
+table players with 2 columns.
+they are Id The id of the player
+Name The name of the player
+
