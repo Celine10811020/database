@@ -130,8 +130,9 @@ MEDIUMINT: 3 bytes, from -8388608 to  8388607
 INT: 4 bytes, from -2147483648 to 2147483647
 
 //4.
-我覺得這個schema挺完整的，尤其是寫完後面的query tasks後，發現這麼設計真的很方便，想不到還有什麼可以改進的地方。
-原本有在想爲什麼players的那個table沒有Team的column，寫到後面的第8題才知道竟然還有交易選手這種東西的存在......。
+我覺得這個schema挺完整的，尤其是寫完後面的query tasks後，發現這麼設計真的很方便。
+原本有在想爲什麼players的那個table沒有Team的column，寫到後面的第8題才知道竟然還有交易選手這種東西的存在......，看來的確不能直接player跟team的對應。
+不過在table pitches，可以將Pitcher那一個column改成Pitcher_id因爲pitcher name可能會有重複，這樣還要與talbe pitchers, players交叉比對才知道其player_id爲何。
 
 //query tasks
 //1.
@@ -979,3 +980,6 @@ LIMIT 1;
 送分
 
 //11.
+
+//12.
+考慮選擇的後援投手爲還有在打比賽的選手，因此只考慮在2021年有上過場，且先發次數小於等於10的投手。
