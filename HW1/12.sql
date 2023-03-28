@@ -1,33 +1,51 @@
---K/IP前二十的選手
+/* K/IP前二十的選手 */
 SELECT
-  player_list.Pitcher_id,
-  pitcher_name,
+  K_IP.Pitcher_id AS Pitcher_id,
+  Name AS Pitcher_name,
   ROUND(avg_K_IP, 4) AS `avg_K/9`
 FROM (
-   --找到先發次數大於10的選手
+  /* 2021年中，每一位投手的AVG(9*K/IP) */
+  SELECT 
+    Pitcher_Id,
+    AVG(9 * K / IP) AS avg_K_IP
+  FROM
+    pitchers
+  JOIN ( 
+     SELECT *
+     FROM games
+     WHERE DATE_FORMAT(games.Date, '%Y') = "2021"
+  ) AS 2021_game
+  ON pitchers.Game = 2021_game.Game
+  GROUP BY Pitcher_Id
+  ORDER BY avg_K_IP DESC
+) AS K_IP
+JOIN players
+ON players.Id = K_IP.Pitcher_Id
+WHERE Pitcher_Id NOT IN (
+   /* 找到先發次數大於10的選手 */
    SELECT
-     Pitcher_id,
-     pitcher_name
+     Pitcher_id
    FROM (
-      --計算2021年中投手先發的次數
+      /* 計算2021年中投手先發的次數 */
       SELECT
         pitcher_name,
         Pitcher_id,
         COUNT(Pitcher_id) AS xian_fa_ci_shu
       FROM (
-         --2021年中有當過先發投手的名字與ID
+         /* 2021年中有當過先發投手的名字與ID */
          SELECT
            pitcher_name_2021_game.game_id AS game_id,
            pitcher_name_2021_game.pitcher_name AS pitcher_name,
            Pitcher_id
          FROM (
-            --找出在2021年中當過start的選手名字
+            /* 找出在2021年中當過start的選手名字 */
             SELECT DISTINCT
                Pitcher AS pitcher_name,
                pitches.Game AS game_id,
                Inning
             FROM pitches
             JOIN (
+              /* 2021年中有上場的選手的ID與名字 */
               SELECT
                 Game
               FROM
@@ -41,7 +59,6 @@ FROM (
               Inning = "B1"
          ) AS pitcher_name_2021_game
          JOIN (
-            --2021年中有上場的選手的ID與名字
             SELECT
               game_id,
               Pitcher_id,
@@ -79,26 +96,9 @@ FROM (
         Pitcher_id
    ) AS pitcher_with_xian_fa_ci_shu
    WHERE xian_fa_ci_shu > 10
- ) player_list
- JOIN (
-    --2021年中，每一位投手的AVG(9*K/IP)
-    SELECT 
-     Pitcher_Id,
-     AVG(9 * K / IP) AS avg_K_IP
-   FROM
-     pitchers
-   JOIN (
-      SELECT *
-      FROM games
-      WHERE DATE_FORMAT(games.Date, '%Y') = "2021"
-   ) AS 2021_game
-   ON pitchers.Game = 2021_game.Game
-   GROUP BY Pitcher_Id
-   ORDER BY avg_K_IP DESC
- ) AS K_IP
- ON player_list.Pitcher_id = K_IP.Pitcher_Id
- ORDER BY avg_K_IP DESC
- LIMIT 20;
+)
+ORDER BY avg_K_IP DESC
+LIMIT 20;
   
 --前20高的avg_st_pc
 SELECT
