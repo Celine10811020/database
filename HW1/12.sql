@@ -351,11 +351,11 @@ FROM (
 GROUP BY Pitcher
 ORDER BY Pitcher
 
-//K/IP前十的選手
+//K/IP前二十的選手
 SELECT
   player_list.Pitcher_id,
   pitcher_name,
-  avg_K_IP
+  ROUND(avg_K_IP, 4) AS `avg_K/9`
 FROM (
    SELECT
      Pitcher_id,
@@ -445,13 +445,13 @@ FROM (
  ) AS K_IP
  ON player_list.Pitcher_id = K_IP.Pitcher_Id
  ORDER BY avg_K_IP DESC
- LIMIT 10;
+ LIMIT 20;
   
-//前10高的avg_st_avg_pc
+//前20高的avg_st_pc
 SELECT
   player_list.Pitcher_id,
   pitcher_name,
-  avg_st_avg_pc
+  ROUND(avg_st_pc, 4) AS `avg_ST/PC`
 FROM (
    SELECT
      Pitcher_id,
@@ -527,7 +527,7 @@ FROM (
  JOIN (
     SELECT
       Pitcher_Id,
-      AVG(ST / PC) AS avg_st_avg_pc
+      AVG(ST / PC) AS avg_st_pc
     FROM (
       SELECT
         Pitcher_Id,
@@ -543,11 +543,11 @@ FROM (
       ON pitchers.Game = 2021_game.Game
    ) AS pitcher_with_pc_st
    GROUP BY Pitcher_Id
-   ORDER BY avg_st_avg_pc DESC
+   ORDER BY avg_st_pc DESC
  ) AS PC_ST
  ON player_list.Pitcher_id = PC_ST.Pitcher_Id
- ORDER BY avg_st_avg_pc DESC
- LIMIT 10;
+ ORDER BY avg_st_pc DESC
+ LIMIT 20;
   
 //會幾種投法
 SELECT
