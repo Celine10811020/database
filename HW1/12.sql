@@ -324,4 +324,4 @@ WHERE Id NOT IN (
    ) AS pitcher_with_xian_fa_ci_shu
    WHERE xian_fa_ci_shu > 10
 ) AND
-ID = "35222" OR ID = "41284"
+ID = "35222" OR ID = "41284";
