@@ -19,6 +19,7 @@ using namespace std;
 
 void initial();
 void keyToValue(int key);
+int check();
 
 int info[2]; //0: global depth
 int directory[NUMBER]; //index: the index of directory, value: point to the bucket
@@ -242,14 +243,28 @@ void hash_table::key_query(vector<int> query_keys, string file_name) //2, 4
   printf("  key_query\n");
 
   int i;
-  int size;
+  int size, status;
   FILE *output;
 
   size = query_keys.size();
 
   //printf("size: %d\n", size);
 
-  output = fopen("key_query_out1.txt", "w");
+  //pan duan dang an shi fo cun zai
+  status = 0;
+  if(output = fopen("key_query_out1.txt", "r"))
+  {
+    fclose(output);
+    status = 1;
+  }
+
+  if(status)
+  {
+    output = fopen("key_query_out2.txt", "w");
+  }else
+  {
+    output = fopen("key_query_out1.txt", "w");
+  }
 
   for(i=0; i<size; i++)
   {
@@ -283,8 +298,223 @@ void keyToValue(int key)
   }
 }
 
-void hash_table::remove_query(vector<int> query_keys){ //3
-  printf("\t\t88\n");
+void hash_table::remove_query(vector<int> query_keys) //3
+{
+  printf("  remove_query\n");
+
+  int i, j, temp, tempOne;
+  unsigned int mask;
+  int key, size, status;
+  int index, pointer;
+
+  size = query_keys.size();
+
+  printf("\tsize: %d\n", size);
+
+  for(i=0; i<size; i++)
+  {
+    key = query_keys[i];
+
+    index = key & ((1 << info[0]) - 1);
+    pointer = directory[index];
+    status = bucket[pointer][1];
+
+    //printf("\tkey: %d, index: %d, pointer: %d\n", key, index, pointer);
+
+    //debug
+    /*temp = pow(2, info[0]);
+    for(j=0; j<temp; j++)
+    {
+      printf("%d %d (%d)\n", j, directory[j], bucket[directory[j]][0]);
+    }*/
+
+    if(status == 1)
+    {
+      //printf("\t\tbucket has one data\n");
+
+      if(key == bucket[pointer][2])
+      {
+        bucket[pointer][2] = 0;
+        bucket[pointer][3] = 0;
+
+        mask = 0;
+
+        mask = 1u << bucket[pointer][0]-1;
+        tempOne = pointer ^ mask;
+
+        //printf("\n\t\tpointer:%d, temp: %d\n", pointer, tempOne);
+
+        tempOne = directory[tempOne];
+
+        if(bucket[pointer][0] == bucket[tempOne][0])
+        {
+          bucket[tempOne][0]--;
+
+          temp = pow(2, info[0]);
+
+          for(j=0; j<temp; j++)
+          {
+            if(directory[j] == pointer)
+            {
+              directory[j] = tempOne;
+            }
+          }
+
+          bucket[pointer][0] = 0;
+          bucket[pointer][1] = 0;
+        }else
+        {
+          bucket[pointer][1] = 0;
+        }
+      }
+    }else if(status == 2)
+    {
+      //printf("\t\tbucket has two data\n");
+
+      if(key == bucket[pointer][2])
+      {
+        bucket[pointer][2] = bucket[pointer][4];
+        bucket[pointer][3] = bucket[pointer][5];
+        bucket[pointer][1]--;
+      }else if(key == bucket[pointer][4])
+      {
+        bucket[pointer][4] = 0;
+        bucket[pointer][5] = 0;
+        bucket[pointer][1]--;
+      }else
+      {
+        continue;
+      }
+
+      mask = 0;
+
+      mask = 1u << bucket[pointer][0]-1;
+      tempOne = pointer ^ mask;
+
+      //printf("\n\t\tpointer:%d, temp: %d\n", pointer, tempOne);
+
+      tempOne = directory[tempOne];
+
+      if(bucket[pointer][0] == bucket[tempOne][0])
+      {
+        if(bucket[tempOne][1] < 2)
+        {
+          //printf("\t\t\tcan be combind\n");
+
+          if(bucket[tempOne][1] == 1)
+          {
+            bucket[tempOne][4] = bucket[pointer][2];
+            bucket[tempOne][5] = bucket[pointer][3];
+            bucket[tempOne][1] = 2;
+          }else if(bucket[tempOne][1] == 0)
+          {
+            bucket[tempOne][2] = bucket[pointer][2];
+            bucket[tempOne][3] = bucket[pointer][3];
+            bucket[tempOne][1] = 1;
+          }
+
+          bucket[tempOne][0]--;
+
+          temp = pow(2, info[0]);
+
+          for(j=0; j<temp; j++)
+          {
+            if(directory[j] == pointer)
+            {
+              directory[j] = tempOne;
+            }
+          }
+
+          bucket[pointer][0] = 0;
+          bucket[pointer][1] = 0;
+        }
+      }
+    }else
+    {
+      mask = 0;
+
+      mask = 1u << bucket[pointer][0]-1;
+      tempOne = pointer ^ mask;
+
+      //printf("\n\t\tpointer:%d, temp: %d\n", pointer, tempOne);
+
+      tempOne = directory[tempOne];
+
+      if(bucket[pointer][0] == bucket[tempOne][0])
+      {
+        bucket[tempOne][0]--;
+
+        temp = pow(2, info[0]);
+
+        for(j=0; j<temp; j++)
+        {
+          if(directory[j] == pointer)
+          {
+            directory[j] = tempOne;
+          }
+        }
+
+        bucket[pointer][0] = 0;
+      }
+    }
+
+    //pause
+    //fgetc(stdin);
+  }
+
+  while(temp)
+  {
+    temp = check();
+  }
+}
+
+int check()
+{
+  int i, j, temp, tempOne;
+  int size, pointer, result, mask;
+
+  result = 0;
+
+  size = pow(info[0], 2);
+
+  for(i=0; i<size; i++)
+  {
+    pointer = directory[i];
+
+    if(bucket[pointer][1] > 0)
+    {
+      continue;
+    }
+
+    mask = 0;
+    mask = 1u << bucket[pointer][0]-1;
+    tempOne = pointer ^ mask;
+
+    //printf("\n\t\tpointer:%d, temp: %d\n", pointer, tempOne);
+
+    tempOne = directory[tempOne];
+
+    if(bucket[pointer][0] == bucket[tempOne][0])
+    {
+      bucket[tempOne][0]--;
+
+      temp = pow(2, info[0]);
+
+      for(j=0; j<temp; j++)
+      {
+        if(directory[j] == pointer)
+        {
+          directory[j] = tempOne;
+        }
+      }
+
+      bucket[pointer][0] = 0;
+
+      result = 1;
+    }
+  }
+
+  return result;
 }
 
 /* Free the memory that you have allocated in this program
